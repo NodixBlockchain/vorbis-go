@@ -11,10 +11,13 @@ package vorbis
 #include "vorbis/codec.h"
 #include "vorbis/vorbisenc.h"
 #include <stdlib.h>
+#include <string.h>
+#include <malloc.h>
 #include "cgo_helpers.h"
 */
 import "C"
 import "unsafe"
+import "log"
 
 // OggStreamPacketin function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_packetin.html
 func OggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
@@ -25,7 +28,35 @@ func OggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 	return __v
 }
 
+func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
+
+	var iop C.ogg_packet
+
+	iop.packet = (*C.uchar)(C.malloc(C.ulonglong(op.Bytes)))
+
+	log.Println("bytes ", C.ulonglong(op.Bytes))
+	log.Println("packet  ", iop.packet)
+
+	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.ulonglong(op.Bytes))
+
+	iop.bytes = C.long(op.Bytes)
+	iop.b_o_s = C.long(op.BOS)
+	iop.e_o_s = C.long(op.EOS)
+	iop.granulepos = C.longlong(op.Granulepos)
+	iop.packetno = C.longlong(op.Packetno)
+
+	cos, _ := os.PassRef()
+	//cop, _ := op.PassRef()
+	__ret := C.ogg_stream_packetin(cos, &iop)
+	__v := (int32)(__ret)
+
+	C.free(unsafe.Pointer(iop.packet))
+
+	return __v
+}
+
 // OggStreamIovecin function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_iovecin.html
+/*
 func OggStreamIovecin(os *OggStreamState, iov *OggIovec, count int32, eOS int, granulepos OggInt64) int32 {
 	cos, _ := os.PassRef()
 	ciov, _ := iov.PassRef()
@@ -36,12 +67,29 @@ func OggStreamIovecin(os *OggStreamState, iov *OggIovec, count int32, eOS int, g
 	__v := (int32)(__ret)
 	return __v
 }
+*/
 
 // OggStreamPageout function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_pageout.html
 func OggStreamPageout(os *OggStreamState, og *OggPage) int32 {
+
+	var iog OggPage
+
 	cos, _ := os.PassRef()
-	cog, _ := og.PassRef()
+	cog, _ := (&iog).PassRef()
+
 	__ret := C.ogg_stream_pageout(cos, cog)
+
+	if __ret > 0 {
+
+		og.HeaderLen = int(iog.refb80411d1.header_len)
+		og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
+		og.BodyLen = int(iog.refb80411d1.body_len)
+		og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+
+		log.Println("header len", og.HeaderLen)
+		log.Println("body len", og.BodyLen)
+	}
+
 	__v := (int32)(__ret)
 	return __v
 }
@@ -58,9 +106,21 @@ func OggStreamPageoutFill(os *OggStreamState, og *OggPage, nfill int32) int32 {
 
 // OggStreamFlush function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_flush.html
 func OggStreamFlush(os *OggStreamState, og *OggPage) int32 {
+
+	var iog OggPage
+
 	cos, _ := os.PassRef()
-	cog, _ := og.PassRef()
+	cog, _ := (&iog).PassRef()
 	__ret := C.ogg_stream_flush(cos, cog)
+
+	og.HeaderLen = int(iog.refb80411d1.header_len)
+	og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
+	og.BodyLen = int(iog.refb80411d1.body_len)
+	og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+
+	log.Println("header len", og.HeaderLen)
+	log.Println("body len", og.BodyLen)
+
 	__v := (int32)(__ret)
 	return __v
 }
@@ -341,9 +401,19 @@ func CommentInit(vc *Comment) {
 
 // CommentAdd function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_comment_add.html
 func CommentAdd(vc *Comment, comment string) {
+
+	cmtlen := C.ulonglong(len(comment))
+
 	cvc, _ := vc.PassRef()
-	ccomment, _ := unpackPCharString(comment)
+	ccomment := (*C.char)(C.malloc(cmtlen + 1))
+
+	scm := []byte(comment)
+	scm = append(scm, 0)
+
+	C.memcpy(unsafe.Pointer(ccomment), unsafe.Pointer(&scm[0]), cmtlen+1)
 	C.vorbis_comment_add(cvc, ccomment)
+
+	C.free(unsafe.Pointer(ccomment))
 }
 
 // CommentAddTag function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_comment_add_tag.html
@@ -429,9 +499,18 @@ func AnalysisInit(v *DspState, vi *Info) int32 {
 
 // CommentheaderOut function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_commentheader_out.html
 func CommentheaderOut(vc *Comment, op *OggPacket) int32 {
+	var iop C.ogg_packet
+
 	cvc, _ := vc.PassRef()
-	cop, _ := op.PassRef()
-	__ret := C.vorbis_commentheader_out(cvc, cop)
+	__ret := C.vorbis_commentheader_out(cvc, &iop)
+
+	op.Packet = C.GoBytes(unsafe.Pointer(iop.packet), C.int(iop.bytes))
+	op.Bytes = int(iop.bytes)
+	op.BOS = int(iop.b_o_s)
+	op.EOS = int(iop.e_o_s)
+	op.Granulepos = OggInt64(iop.granulepos)
+	op.Packetno = OggInt64(iop.packetno)
+
 	__v := (int32)(__ret)
 	return __v
 }
@@ -463,6 +542,20 @@ func AnalysisWrote(v *DspState, vals int32) int32 {
 	cvals, _ := (C.int)(vals), cgoAllocsUnknown
 	__ret := C.vorbis_analysis_wrote(cv, cvals)
 	__v := (int32)(__ret)
+	return __v
+}
+
+func AnalysisWriteBuffer(v *DspState, buffer []float32, vals int32) int32 {
+	cv, _ := v.PassRef()
+	cvals, _ := (C.int)(vals), cgoAllocsUnknown
+	__ret := C.vorbis_analysis_buffer(cv, cvals)
+
+	mychan := *__ret
+
+	C.memcpy(unsafe.Pointer(mychan), unsafe.Pointer(&buffer[0]), C.ulonglong(vals)*4)
+
+	___ret := C.vorbis_analysis_wrote(cv, cvals)
+	__v := (int32)(___ret)
 	return __v
 }
 
