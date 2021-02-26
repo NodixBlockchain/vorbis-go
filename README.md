@@ -1,15 +1,17 @@
 vorbis-go ![vorbis](https://xiph.org/images/logos/fish_xiph_org.png)
 =========
 
+Forked from xiph to add ogg encoding capacity
+
 The package provides Go bindings for OggVorbis encoder/decoder reference implementation from [Xiph.org](https://www.xiph.org).<br />
 All the binding code has automatically been generated with rules defined in [vorbis.yml](/vorbis.yml).
 
 ### Usage
 
 ```
-$ go get github.com/xlab/vorbis-go/vorbis
+$ go get github.com/NodixBlockchain/vorbis-go/vorbis
 
-$ go get github.com/xlab/vorbis-go/decoder
+$ go get github.com/NodixBlockchain/vorbis-go/decoder
 (optionally if you need a quickstart in decoding)
 ```
 
@@ -47,7 +49,7 @@ Playing...
 You will need to get the [cgogen](https://git.io/cgogen) tool installed first.
 
 ```
-$ git clone https://github.com/xlab/vorbis-go && cd vorbis-go
+$ git clone https://github.com/NodixBlockchain/vorbis-go && cd vorbis-go
 $ make clean
 $ make
 ```
