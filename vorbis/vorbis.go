@@ -34,9 +34,6 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 
 	iop.packet = (*C.uchar)(C.calloc(C.size_t(op.Bytes), (C.size_t)(1)))
 
-	log.Println("bytes ", C.ulong(op.Bytes))
-	log.Println("packet  ", iop.packet)
-
 	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.size_t(op.Bytes))
 
 	iop.bytes = C.long(op.Bytes)
