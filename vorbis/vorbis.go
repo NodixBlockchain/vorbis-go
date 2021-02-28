@@ -32,7 +32,7 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 
 	var iop C.ogg_packet
 
-	iop.packet = (*C.uchar)(C.malloc(C.ulong(op.Bytes)))
+	iop.packet = (*C.uchar)(C.calloc(C.size_t(op.Bytes), (C.size_t)(1)))
 
 	log.Println("bytes ", C.ulong(op.Bytes))
 	log.Println("packet  ", iop.packet)
