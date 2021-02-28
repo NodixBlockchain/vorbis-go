@@ -17,7 +17,6 @@ package vorbis
 */
 import "C"
 import "unsafe"
-import "log"
 
 // OggStreamPacketin function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_packetin.html
 func OggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
@@ -84,8 +83,6 @@ func OggStreamPageout(os *OggStreamState, og *OggPage) int32 {
 		og.BodyLen = int(iog.refb80411d1.body_len)
 		og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
 
-		log.Println("header len", og.HeaderLen)
-		log.Println("body len", og.BodyLen)
 	}
 
 	__v := (int32)(__ret)
@@ -115,9 +112,6 @@ func OggStreamFlush(os *OggStreamState, og *OggPage) int32 {
 	og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
 	og.BodyLen = int(iog.refb80411d1.body_len)
 	og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
-
-	log.Println("header len", og.HeaderLen)
-	log.Println("body len", og.BodyLen)
 
 	__v := (int32)(__ret)
 	return __v
