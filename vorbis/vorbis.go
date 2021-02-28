@@ -44,7 +44,7 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 	iop.e_o_s = C.long(op.EOS)
 
 	C.memcpy(unsafe.Pointer(&iop.granulepos), unsafe.Pointer(&op.Granulepos), 8)
-	C.memcpy(unsafe.Pointer(&iop.packetno), unsafe.Pointer(&op.packetno), 8)
+	C.memcpy(unsafe.Pointer(&iop.packetno), unsafe.Pointer(&op.Packetno), 8)
 
 	cos, _ := os.PassRef()
 	//cop, _ := op.PassRef()
