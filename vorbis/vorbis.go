@@ -519,24 +519,51 @@ func AnalysisHeaderout(v *DspState, vc *Comment, op *OggPacket, opComm *OggPacke
 	return __v
 }
 
-// AnalysisHeaderout function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_analysis_headerout.html
-func OpusHeaderout(encoder *opus.Encoder, op *OggPacket, opComm *OggPacket) int32 {
+func PutUint32(b []byte, v uint32) []byte {
+	var r []byte
 
-	var hdr vorbis.OpusHeader
+	r = append(b, byte(v))
+	r = append(r, byte(v>>8))
+	r = append(r, byte(v>>16))
+	r = append(r, byte(v>>24))
+
+	return r
+}
+
+func PutUint16(b []byte, v uint16) []byte {
+	var r []byte
+
+	r = append(b, byte(v))
+	r = append(r, byte(v>>8))
+
+	return r
+}
+
+func PutInt16(b []byte, v int16) []byte {
+	var r []byte
+	r = append(b, byte(v))
+	r = append(r, byte(v>>8))
+	return r
+}
+
+// AnalysisHeaderout function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_analysis_headerout.html
+func OpusHeaderout(encoderName string, sample_rate int, channels int, op *OggPacket, opComm *OggPacket) int32 {
+
+	var hdr OpusOGGHeader
 
 	hdr.version = 1
-	hdr.channel_count = encoder.channels
+	hdr.channel_count = channels
 	hdr.pre_skip = 0
-	hdr.input_sample_rate = 48000
+	hdr.input_sample_rate = sample_rate
 	hdr.output_gain = 0
 	hdr.mapping_family = 0
 
-	packetBuffer = []byte("OpusHead")
+	packetBuffer := []byte("OpusHead")
 	packetBuffer = append(packetBuffer, byte(hdr.version))
 	packetBuffer = append(packetBuffer, byte(hdr.channel_count))
-	packetBuffer = e.PutUint16(packetBuffer, uint16(hdr.pre_skip))
-	packetBuffer = e.PutUint32(packetBuffer, uint32(hdr.input_sample_rate))
-	packetBuffer = e.PutInt16(packetBuffer, int16(hdr.output_gain))
+	packetBuffer = PutUint16(packetBuffer, uint16(hdr.pre_skip))
+	packetBuffer = PutUint32(packetBuffer, uint32(hdr.input_sample_rate))
+	packetBuffer = PutInt16(packetBuffer, int16(hdr.output_gain))
 	packetBuffer = append(packetBuffer, byte(hdr.mapping_family))
 
 	if hdr.mapping_family != 0 {
@@ -547,7 +574,7 @@ func OpusHeaderout(encoder *opus.Encoder, op *OggPacket, opComm *OggPacket) int3
 
 		packetBuffer = append(packetBuffer, byte(hdr.stream_count))
 		packetBuffer = append(packetBuffer, byte(hdr.coupled_count))
-		for i := 0; i < e.NumChans; i++ {
+		for i := 0; i < channels; i++ {
 			packetBuffer = append(packetBuffer, hdr.mapping[i])
 		}
 	}
@@ -558,6 +585,20 @@ func OpusHeaderout(encoder *opus.Encoder, op *OggPacket, opComm *OggPacket) int3
 	op.EOS = 0
 	op.Granulepos = 0
 	op.Packetno = 0
+
+	packetBuffer = []byte("OpusTags")
+	packetBuffer = PutUint32(packetBuffer, uint32(len(encoderName)))
+	packetBuffer = append(packetBuffer, []byte(encoderName)...)
+	packetBuffer = PutUint32(packetBuffer, uint32(0))
+
+	opComm.Packet = packetBuffer
+	opComm.Bytes = len(packetBuffer)
+	opComm.BOS = 0
+	opComm.EOS = 0
+	opComm.Granulepos = 0
+	opComm.Packetno = 1
+
+	return 0
 }
 
 // AnalysisBuffer function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_analysis_buffer.html
