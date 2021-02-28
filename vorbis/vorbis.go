@@ -17,6 +17,7 @@ package vorbis
 */
 import "C"
 import "unsafe"
+import "log"
 
 // OggStreamPacketin function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_packetin.html
 func OggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
@@ -31,9 +32,12 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 
 	var iop C.ogg_packet
 
-	iop.packet = (*C.uchar)(C.malloc(C.ulonglong(op.Bytes)))
+	iop.packet = (*C.uchar)(C.malloc(C.ulong(op.Bytes)))
 
-	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.ulonglong(op.Bytes))
+	log.Println("bytes ", C.ulong(op.Bytes))
+	log.Println("packet  ", iop.packet)
+
+	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.ulong(op.Bytes))
 
 	iop.bytes = C.long(op.Bytes)
 	iop.b_o_s = C.long(op.BOS)
@@ -82,6 +86,8 @@ func OggStreamPageout(os *OggStreamState, og *OggPage) int32 {
 		og.BodyLen = int(iog.refb80411d1.body_len)
 		og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
 
+		log.Println("header len", og.HeaderLen)
+		log.Println("body len", og.BodyLen)
 	}
 
 	__v := (int32)(__ret)
@@ -111,6 +117,9 @@ func OggStreamFlush(os *OggStreamState, og *OggPage) int32 {
 	og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
 	og.BodyLen = int(iog.refb80411d1.body_len)
 	og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+
+	log.Println("header len", og.HeaderLen)
+	log.Println("body len", og.BodyLen)
 
 	__v := (int32)(__ret)
 	return __v
@@ -393,7 +402,7 @@ func CommentInit(vc *Comment) {
 // CommentAdd function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_comment_add.html
 func CommentAdd(vc *Comment, comment string) {
 
-	cmtlen := C.ulonglong(len(comment))
+	cmtlen := C.ulong(len(comment))
 
 	cvc, _ := vc.PassRef()
 	ccomment := (*C.char)(C.malloc(cmtlen + 1))
@@ -543,7 +552,7 @@ func AnalysisWriteBuffer(v *DspState, buffer []float32, vals int32) int32 {
 
 	mychan := *__ret
 
-	C.memcpy(unsafe.Pointer(mychan), unsafe.Pointer(&buffer[0]), C.ulonglong(vals)*4)
+	C.memcpy(unsafe.Pointer(mychan), unsafe.Pointer(&buffer[0]), C.ulong(vals)*4)
 
 	___ret := C.vorbis_analysis_wrote(cv, cvals)
 	__v := (int32)(___ret)
