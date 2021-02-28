@@ -547,14 +547,14 @@ func PutInt16(b []byte, v int16) []byte {
 }
 
 // AnalysisHeaderout function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_analysis_headerout.html
-func OpusHeaderout(encoderName string, sample_rate int, channels int, op *OggPacket, opComm *OggPacket) int32 {
+func OpusHeaderout(encoderName string, sample_rate int, channels byte, op *OggPacket, opComm *OggPacket) int32 {
 
 	var hdr OpusOGGHeader
 
 	hdr.version = 1
 	hdr.channel_count = channels
 	hdr.pre_skip = 0
-	hdr.input_sample_rate = sample_rate
+	hdr.input_sample_rate = uint32(sample_rate)
 	hdr.output_gain = 0
 	hdr.mapping_family = 0
 
