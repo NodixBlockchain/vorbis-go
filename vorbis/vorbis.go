@@ -547,7 +547,7 @@ func PutInt16(b []byte, v int16) []byte {
 }
 
 // AnalysisHeaderout function as declared in https://xiph.org/vorbis/doc/libvorbis/vorbis_analysis_headerout.html
-func OpusHeaderout(encoderName string, sample_rate int, channels byte, op *OggPacket, opComm *OggPacket) int32 {
+func OpusHeaderout(encoderName string, sample_rate int, channels int, op *OggPacket, opComm *OggPacket) int32 {
 
 	var hdr OpusOGGHeader
 
