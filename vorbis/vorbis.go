@@ -42,8 +42,8 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 	iop.bytes = C.long(op.Bytes)
 	iop.b_o_s = C.long(op.BOS)
 	iop.e_o_s = C.long(op.EOS)
-	iop.granulepos = C.long(op.Granulepos)
-	iop.packetno = C.long(op.Packetno)
+	iop.granulepos = (OggInt64)(op.Granulepos)
+	iop.packetno = (OggInt64)(op.Packetno)
 
 	cos, _ := os.PassRef()
 	//cop, _ := op.PassRef()
