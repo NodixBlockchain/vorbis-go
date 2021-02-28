@@ -37,13 +37,14 @@ func MyOggStreamPacketin(os *OggStreamState, op *OggPacket) int32 {
 	log.Println("bytes ", C.ulong(op.Bytes))
 	log.Println("packet  ", iop.packet)
 
-	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.ulong(op.Bytes))
+	C.memcpy(unsafe.Pointer(iop.packet), unsafe.Pointer(&op.Packet[0]), C.size_t(op.Bytes))
 
 	iop.bytes = C.long(op.Bytes)
 	iop.b_o_s = C.long(op.BOS)
 	iop.e_o_s = C.long(op.EOS)
-	iop.granulepos = (OggInt64)(op.Granulepos)
-	iop.packetno = (OggInt64)(op.Packetno)
+
+	C.memcpy(unsafe.Pointer(&iop.granulepos), unsafe.Pointer(&op.Granulepos), 8)
+	C.memcpy(unsafe.Pointer(&iop.packetno), unsafe.Pointer(&op.packetno), 8)
 
 	cos, _ := os.PassRef()
 	//cop, _ := op.PassRef()
@@ -405,12 +406,12 @@ func CommentAdd(vc *Comment, comment string) {
 	cmtlen := C.ulong(len(comment))
 
 	cvc, _ := vc.PassRef()
-	ccomment := (*C.char)(C.malloc(cmtlen + 1))
+	ccomment := (*C.char)(C.calloc(C.size_t(cmtlen+1), C.size_t(1)))
 
 	scm := []byte(comment)
 	scm = append(scm, 0)
 
-	C.memcpy(unsafe.Pointer(ccomment), unsafe.Pointer(&scm[0]), cmtlen+1)
+	C.memcpy(unsafe.Pointer(ccomment), unsafe.Pointer(&scm[0]), C.size_t(cmtlen+1))
 	C.vorbis_comment_add(cvc, ccomment)
 
 	C.free(unsafe.Pointer(ccomment))
@@ -552,7 +553,7 @@ func AnalysisWriteBuffer(v *DspState, buffer []float32, vals int32) int32 {
 
 	mychan := *__ret
 
-	C.memcpy(unsafe.Pointer(mychan), unsafe.Pointer(&buffer[0]), C.ulong(vals)*4)
+	C.memcpy(unsafe.Pointer(mychan), unsafe.Pointer(&buffer[0]), C.size_t(vals)*4)
 
 	___ret := C.vorbis_analysis_wrote(cv, cvals)
 	__v := (int32)(___ret)
