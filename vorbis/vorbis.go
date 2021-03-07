@@ -91,10 +91,21 @@ func OggStreamPageout(os *OggStreamState, og *OggPage) int32 {
 
 // OggStreamPageoutFill function as declared in https://xiph.org/ogg/doc/libogg/ogg_stream_pageout_fill.html
 func OggStreamPageoutFill(os *OggStreamState, og *OggPage, nfill int32) int32 {
+
+	var iog OggPage
+
 	cos, _ := os.PassRef()
-	cog, _ := og.PassRef()
+	cog, _ := (&iog).PassRef()
 	cnfill, _ := (C.int)(nfill), cgoAllocsUnknown
 	__ret := C.ogg_stream_pageout_fill(cos, cog, cnfill)
+
+	if __ret > 0 {
+		og.HeaderLen = int(iog.refb80411d1.header_len)
+		og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
+		og.BodyLen = int(iog.refb80411d1.body_len)
+		og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+	}
+
 	__v := (int32)(__ret)
 	return __v
 }
@@ -108,10 +119,12 @@ func OggStreamFlush(os *OggStreamState, og *OggPage) int32 {
 	cog, _ := (&iog).PassRef()
 	__ret := C.ogg_stream_flush(cos, cog)
 
-	og.HeaderLen = int(iog.refb80411d1.header_len)
-	og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
-	og.BodyLen = int(iog.refb80411d1.body_len)
-	og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+	if __ret > 0 {
+		og.HeaderLen = int(iog.refb80411d1.header_len)
+		og.Header = C.GoBytes(unsafe.Pointer(iog.refb80411d1.header), C.int(og.HeaderLen))
+		og.BodyLen = int(iog.refb80411d1.body_len)
+		og.Body = C.GoBytes(unsafe.Pointer(iog.refb80411d1.body), C.int(og.BodyLen))
+	}
 
 	__v := (int32)(__ret)
 	return __v
